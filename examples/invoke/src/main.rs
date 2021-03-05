@@ -1,2 +1,2 @@
-#[backend::test]
+mod otherfile;
 fn main() {}
