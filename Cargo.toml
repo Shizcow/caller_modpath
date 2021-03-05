@@ -2,6 +2,7 @@
 
 members = [
     "caller_modpath",
+    "caller_modpath_macros",
     "examples/backend",
     "examples/invoke",
 ]

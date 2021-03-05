@@ -19,11 +19,22 @@ dependencies = [
 name = "caller_modpath"
 version = "0.1.0"
 dependencies = [
+ "caller_modpath_macros",
+ "cargo-manifest",
+ "glob",
+ "proc-macro2",
+ "quote",
+ "uuid",
+]
+
+[[package]]
+name = "caller_modpath_macros"
+version = "0.1.0"
+dependencies = [
  "cargo-manifest",
  "enquote",
  "glob",
  "proc-macro-error",
- "proc-macro-hack",
  "proc-macro2",
  "quote",
  "stdext",
@@ -123,12 +134,6 @@ dependencies = [
  "quote",
  "version_check",
 ]
-
-[[package]]
-name = "proc-macro-hack"
-version = "0.5.19"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dbf0c48bc1d91375ae5c3cd81e3722dff1abcf81a30960240640d223f59fe0e5"
 
 [[package]]
 name = "proc-macro2"
