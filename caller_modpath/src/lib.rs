@@ -7,13 +7,14 @@ use std::path::PathBuf;
 use proc_macro2::TokenStream;
 use uuid::Uuid;
 
-pub static UUID_ENV_VAR_NAME: &'static str = "CARGO_INJECT_USEGROUP_SECOND_PASS_UUID";
+pub static UUID_ENV_VAR_NAME: &'static str = concat!("CARGO_INJECT_", env!("CARGO_PKG_NAME"), "_SECOND_PASS_UUID");
 
 pub fn gen_second_pass() -> TokenStream {
         let i = Ident::new(
             &format!(
-                "USERGROUP_UUID_{}",
-                std::env::var(UUID_ENV_VAR_NAME).unwrap()
+                "{}_UUID_{}",
+		env!("CARGO_PKG_NAME"),
+		std::env::var(UUID_ENV_VAR_NAME).unwrap()
             ),
             Span::call_site(),
         );
@@ -70,7 +71,7 @@ pub fn gen_first_pass() -> String {
         ])
         .arg(format!("proc_crate={}", chosen_dir.to_string_lossy()))
         .arg(entry_p.into_os_string())
-        .env("CARGO_INJECT_USEGROUP_SECOND_PASS_UUID", &uuid_string)
+        .env(UUID_ENV_VAR_NAME, &uuid_string)
         .output()
         .expect("failed to execute a second pass of rustc");
     
