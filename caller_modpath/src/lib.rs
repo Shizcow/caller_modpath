@@ -23,7 +23,8 @@ pub fn gen_second_pass() -> TokenStream {
         })
 }
 
-pub fn gen_first_pass() -> String {
+pub fn gen_first_pass(client_proc_macro_crate_name: &str) -> String {
+    let client_user_crate_name = std::env::var("CARGO_CRATE_NAME").expect("Could not read env var CARGO_CRATE_NAME");
 
     let entry_p = get_entrypoint();
 
@@ -38,27 +39,7 @@ pub fn gen_first_pass() -> String {
         }
     );
 
-    let dep_p = PathBuf::from(std::env::current_dir().expect("Could not read env var OUT_DIR")).join(dep_dir)
-        .join(format!("lib{}-*.so", env!("CARGO_CRATE_NAME")))
-        .into_os_string();
-
-    let dep_str = dep_p.to_string_lossy();
-
-    let chosen_dir = glob::glob(&dep_str)
-        .expect("Failed to read library glob pattern")
-        .into_iter()
-        .filter_map(|entry| {
-            entry.ok().and_then(|e| {
-                std::fs::metadata(&e)
-                    .and_then(|f| f.accessed())
-                    .ok()
-                    .map(|t| (e, t))
-            })
-        })
-        .min()
-        .map(|(f, _)| f)
-        .expect("Could not find suitable backend library paths")
-        .into_os_string();
+    let chosen_dir = find_lib_so(&client_proc_macro_crate_name);
 
     let proc = std::process::Command::new("rustc")
 	.current_dir(std::env::var("CARGO_MANIFEST_DIR").unwrap())
@@ -69,7 +50,7 @@ pub fn gen_first_pass() -> String {
             "--color=never",
             "--extern",
         ])
-        .arg(format!("proc_crate={}", chosen_dir.to_string_lossy()))
+        .arg(format!("{}={}", client_proc_macro_crate_name, chosen_dir))
         .arg(entry_p.into_os_string())
         .env(UUID_ENV_VAR_NAME, &uuid_string)
         .output()
@@ -100,4 +81,37 @@ fn get_entrypoint() -> PathBuf {
 	// just a library: can assume it's just src/lib.rs
 	manifest_dir.join("src").join("lib.rs")
     }
+}
+
+fn find_lib_so(libname: &str) -> String {
+    let dep_dir = format!(
+        "target/{}/deps/",
+        if cfg!(debug_assertions) {
+            "debug"
+        } else {
+            "release"
+        }
+    );
+
+    let dep_p = PathBuf::from(std::env::current_dir().expect("Could not get current dir from env")).join(dep_dir)
+        .join(format!("lib{}-*.so", libname))
+        .into_os_string();
+
+    let dep_str = dep_p.to_string_lossy();
+
+    glob::glob(&dep_str)
+        .expect("Failed to read library glob pattern")
+        .into_iter()
+        .filter_map(|entry| {
+            entry.ok().and_then(|e| {
+                std::fs::metadata(&e)
+                    .and_then(|f| f.accessed())
+                    .ok()
+                    .map(|t| (e, t))
+            })
+        })
+        .min()
+        .map(|(f, _)| f)
+        .expect(&format!("Could not find suitable backend library paths via glob {}", dep_str))
+        .into_os_string().to_string_lossy().to_string()
 }
