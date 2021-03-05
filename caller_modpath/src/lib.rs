@@ -89,29 +89,45 @@ fn get_entrypoint() -> PathBuf {
 
 fn find_lib_so(libname: &str) -> String {
 
-    let dep_p = PathBuf::from(std::env::current_dir().expect("Could not get current dir from env")).join("target").join(if cfg!(debug_assertions) {
+    let target_path = PathBuf::from(std::env::current_dir().expect("Could not get current dir from env")).join("target").join(if cfg!(debug_assertions) {
             "debug"
         } else {
             "release"
-        })
-        .join(format!("lib{}.so", libname))
+        });
+
+    // need to look in two places:
+    // target/{}/deps/ for crate dependencies
+    let dep_p = target_path.join("deps")
+        .join(format!("lib{}-*.so", libname))
         .into_os_string();
 
     let dep_str = dep_p.to_string_lossy();
 
-    glob::glob(&dep_str)
+    // and target/{}/ for workspace targets
+    let t_p = target_path
+        .join(format!("lib{}.so", libname));
+
+    let mut file_candidates: Vec<_> = glob::glob(&dep_str)
         .expect("Failed to read library glob pattern")
         .into_iter()
         .filter_map(|entry| {
-            entry.ok().and_then(|e| {
-                std::fs::metadata(&e)
+	    entry.ok()
+	}).collect();
+
+    file_candidates.push(t_p);
+
+    let fstr = file_candidates.iter().map(|p| p.to_string_lossy()).collect::<Vec<_>>().join(" ");
+
+    file_candidates.into_iter()
+        .filter_map(|entry| {
+            std::fs::metadata(&entry)
                     .and_then(|f| f.accessed())
                     .ok()
-                    .map(|t| (e, t))
-            })
+                    .map(|t| (entry, t))
+            
         })
-        .min()
+        .max()
         .map(|(f, _)| f)
-        .expect(&format!("Could not find suitable backend library paths via glob {}", dep_str))
+        .expect(&format!("Could not find suitable backend library paths from file list {}", fstr))
         .into_os_string().to_string_lossy().to_string()
 }
