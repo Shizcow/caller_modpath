@@ -41,24 +41,28 @@ pub fn gen_first_pass(client_proc_macro_crate_name: &str) -> String {
 
     let chosen_dir = find_lib_so(&client_proc_macro_crate_name);
 
+    let liblink_path = format!("{}={}", client_proc_macro_crate_name,
+				   chosen_dir);
+
+    let rustc_args = vec!["-Z",
+			  "unstable-options",
+			  "--pretty=expanded",
+			  "--color=never",
+			  "--extern",
+			  &liblink_path,
+			  entry_p.to_str().unwrap(),
+    ];
+
     let proc = std::process::Command::new("rustc")
 	.current_dir(std::env::var("CARGO_MANIFEST_DIR").unwrap())
-        .args(&[
-            "-Z",
-            "unstable-options",
-            "--pretty=expanded",
-            "--color=never",
-            "--extern",
-        ])
-        .arg(format!("{}={}", client_proc_macro_crate_name, chosen_dir))
-        .arg(entry_p.into_os_string())
+	.args(&rustc_args)
         .env(UUID_ENV_VAR_NAME, &uuid_string)
         .output()
         .expect("failed to execute a second pass of rustc");
     
     String::from_utf8_lossy(&proc.stdout).split(&uuid_string)
         .nth(1)
-        .expect(&format!("Failed to find internal UUID; rustc metacall probably faliled. Stderr:\n{}", String::from_utf8_lossy(&proc.stderr)))
+        .expect(&format!("Failed to find internal UUID; rustc metacall probably faliled. Called as `rustc {}`. Stderr:\n{}", rustc_args.join(" "), String::from_utf8_lossy(&proc.stderr)))
         .chars()
         .skip_while(|c| c != &'"')
         .skip(1)
@@ -84,17 +88,13 @@ fn get_entrypoint() -> PathBuf {
 }
 
 fn find_lib_so(libname: &str) -> String {
-    let dep_dir = format!(
-        "target/{}/deps/",
-        if cfg!(debug_assertions) {
+
+    let dep_p = PathBuf::from(std::env::current_dir().expect("Could not get current dir from env")).join("target").join(if cfg!(debug_assertions) {
             "debug"
         } else {
             "release"
-        }
-    );
-
-    let dep_p = PathBuf::from(std::env::current_dir().expect("Could not get current dir from env")).join(dep_dir)
-        .join(format!("lib{}-*.so", libname))
+        })
+        .join(format!("lib{}.so", libname))
         .into_os_string();
 
     let dep_str = dep_p.to_string_lossy();
