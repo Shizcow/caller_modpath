@@ -2,6 +2,7 @@ pub use caller_modpath_macros::*;
 
 pub use proc_macro2::{Span, Ident};
 pub use quote::quote;
+pub use once_cell::sync::OnceCell;
 
 use std::path::PathBuf;
 use proc_macro2::TokenStream;
