@@ -9,6 +9,29 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cdb031dd78e28731d87d56cc8ffef4a8f36ca26c38fe2de700543e627f8a464a"
 
 [[package]]
+name = "backend"
+version = "0.1.0"
+dependencies = [
+ "caller_modpath",
+]
+
+[[package]]
+name = "caller_modpath"
+version = "0.1.0"
+dependencies = [
+ "cargo-manifest",
+ "enquote",
+ "glob",
+ "proc-macro-error",
+ "proc-macro-hack",
+ "proc-macro2",
+ "quote",
+ "stdext",
+ "syn",
+ "uuid",
+]
+
+[[package]]
 name = "cargo-manifest"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -24,13 +47,6 @@ name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
-
-[[package]]
-name = "dep_crate"
-version = "0.1.0"
-dependencies = [
- "proc_crate",
-]
 
 [[package]]
 name = "enquote"
@@ -72,10 +88,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "invoke"
+version = "0.1.0"
+dependencies = [
+ "backend",
+]
+
+[[package]]
 name = "libc"
-version = "0.2.87"
+version = "0.2.88"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "265d751d31d6780a3f956bb5b8022feba2d94eeee5a84ba64f4212eedca42213"
+checksum = "03b07a082330a35e43f63177cc01689da34fbffa0105e1246cf0311472cac73a"
 
 [[package]]
 name = "proc-macro-error"
@@ -117,22 +140,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "proc_crate"
-version = "0.1.0"
-dependencies = [
- "cargo-manifest",
- "enquote",
- "glob",
- "proc-macro-error",
- "proc-macro-hack",
- "proc-macro2",
- "quote",
- "stdext",
- "syn",
- "uuid",
-]
-
-[[package]]
 name = "quote"
 version = "1.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -166,21 +173,13 @@ checksum = "4a61b4ae487cb43d0479907e74d36f8813e9940bd3b1adcbecc69fe8a0cee3ec"
 
 [[package]]
 name = "syn"
-version = "1.0.60"
+version = "1.0.61"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c700597eca8a5a762beb35753ef6b94df201c81cca676604f547495a0d7f0081"
+checksum = "ed22b90a0e734a23a7610f4283ac9e5acfb96cbb30dfefa540d66f866f1c09c5"
 dependencies = [
  "proc-macro2",
  "quote",
  "unicode-xid",
-]
-
-[[package]]
-name = "testing"
-version = "0.1.0"
-dependencies = [
- "dep_crate",
- "proc_crate",
 ]
 
 [[package]]

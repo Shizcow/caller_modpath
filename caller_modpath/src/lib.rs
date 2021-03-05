@@ -16,10 +16,10 @@ pub fn push_to_tag(attr: TokenStream, input: TokenStream) -> TokenStream {
 	    static #i: &'static str = module_path!();
 	});
     } else {
-	let p = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap()).join("Cargo.toml");
-	let manifest = cargo_manifest::Manifest::from_path(p).unwrap();
+	let p = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").expect("Could not get CARGO_MANIFEST_DIR")).join("Cargo.toml");
+	let manifest = cargo_manifest::Manifest::from_path(p).expect("Could not load source's Cargo.toml");
 
-	let bin_name = std::env::var("CARGO_BIN_NAME").unwrap();
+	let bin_name = std::env::var("CARGO_BIN_NAME").expect("Could not get CARGO_BIN_NAME");
 	let rustc_entry = manifest.bin.unwrap().into_iter().find(|target| target.name.as_ref() == Some(&bin_name)).unwrap().path.unwrap();
 	let entry_p = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap()).join(rustc_entry);
 	eprintln!("rustc_entry: {:?}", entry_p);
