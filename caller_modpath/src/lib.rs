@@ -8,7 +8,7 @@ use std::path::PathBuf;
 use proc_macro2::TokenStream;
 use uuid::Uuid;
 
-pub static UUID_ENV_VAR_NAME: &'static str = concat!("CARGO_INJECT_", env!("CARGO_PKG_NAME"), "_SECOND_PASS_UUID");
+pub static UUID_ENV_VAR_NAME: &str = concat!("CARGO_INJECT_", env!("CARGO_PKG_NAME"), "_SECOND_PASS_UUID");
 
 pub fn gen_second_pass() -> TokenStream {
         let i = Ident::new(
@@ -19,26 +19,15 @@ pub fn gen_second_pass() -> TokenStream {
             ),
             Span::call_site(),
         );
-        TokenStream::from(quote! {
+        quote! {
             static #i: &'static str = module_path!();
-        })
+        }
 }
 
 pub fn gen_first_pass(client_proc_macro_crate_name: &str) -> String {
-    let client_user_crate_name = std::env::var("CARGO_CRATE_NAME").expect("Could not read env var CARGO_CRATE_NAME");
-
     let entry_p = get_entrypoint();
 
     let uuid_string = Uuid::new_v4().to_string().replace("-", "_");
-
-    let dep_dir = format!(
-        "target/{}/deps/",
-        if cfg!(debug_assertions) {
-            "debug"
-        } else {
-            "release"
-        }
-    );
 
     let chosen_dir = find_lib_so(&client_proc_macro_crate_name);
 
@@ -63,7 +52,7 @@ pub fn gen_first_pass(client_proc_macro_crate_name: &str) -> String {
     
     String::from_utf8_lossy(&proc.stdout).split(&uuid_string)
         .nth(1)
-        .expect(&format!("Failed to find internal UUID; rustc metacall probably faliled. Called as `rustc {}`. Stderr:\n{}", rustc_args.join(" "), String::from_utf8_lossy(&proc.stderr)))
+        .unwrap_or_else(|| panic!("Failed to find internal UUID; rustc metacall probably faliled. Called as `rustc {}`. Stderr:\n{}", rustc_args.join(" "), String::from_utf8_lossy(&proc.stderr)))
         .chars()
         .skip_while(|c| c != &'"')
         .skip(1)
@@ -90,7 +79,7 @@ fn get_entrypoint() -> PathBuf {
 
 fn find_lib_so(libname: &str) -> String {
 
-    let target_path = PathBuf::from(std::env::current_dir().expect("Could not get current dir from env")).join("target").join(if cfg!(debug_assertions) {
+    let target_path = std::env::current_dir().expect("Could not get current dir from env").join("target").join(if cfg!(debug_assertions) {
             "debug"
         } else {
             "release"
@@ -129,6 +118,6 @@ fn find_lib_so(libname: &str) -> String {
         })
         .max()
         .map(|(f, _)| f)
-        .expect(&format!("Could not find suitable backend library paths from file list {}", fstr))
+        .unwrap_or_else(|| panic!("Could not find suitable backend library paths from file list {}", fstr))
         .into_os_string().to_string_lossy().to_string()
 }

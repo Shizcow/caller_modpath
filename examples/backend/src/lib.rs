@@ -6,7 +6,7 @@ use proc_macro::TokenStream;
 
 //#[caller_modpath::make_modpath_available]
 #[proc_macro_attribute]
-pub fn test(attr: TokenStream, input: TokenStream) -> TokenStream {
+pub fn test(_attr: TokenStream, _input: TokenStream) -> TokenStream {
     if std::env::var(caller_modpath::UUID_ENV_VAR_NAME).is_ok() {
         return caller_modpath::gen_second_pass().into();
     }
@@ -21,6 +21,4 @@ pub fn test(attr: TokenStream, input: TokenStream) -> TokenStream {
     impl ModPath for proc_macro::Span {}
 
     panic!("module path of call site: {}", proc_macro::Span::modpath());
-
-    input
 }
