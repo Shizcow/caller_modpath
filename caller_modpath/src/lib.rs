@@ -6,10 +6,8 @@ extern crate proc_macro;
 pub use caller_modpath_macros::*;
 
 pub use once_cell::sync::OnceCell;
-pub use proc_macro2::{Ident, Span};
 pub use quote::quote;
 
-use proc_macro2::TokenStream;
 use std::path::PathBuf;
 use std::sync::RwLock;
 use uuid::Uuid;
@@ -21,7 +19,7 @@ pub trait CallerModpath {
 
 impl CallerModpath for proc_macro::Span {
     fn caller_modpath() -> String {
-        let call_site = Span::call_site().unwrap();
+        let call_site = proc_macro2::Span::call_site().unwrap();
         MODCACHE.with(move |m| {
             let locked = m.read().unwrap();
             for i in 0..locked.len() {
@@ -46,29 +44,30 @@ impl CallerModpath for proc_macro2::Span {
 // A lot of this stuff is crazy because of that
 // If this was better I'd stick it in a lazy_static HashMap and call it a day but sometype needs attention
 thread_local! {
-    static MODCACHE: RwLock<Vec<(Span, String)>> = RwLock::new(vec![]);
+    static MODCACHE: RwLock<Vec<(proc_macro2::Span, String)>> = RwLock::new(vec![]);
 }
 
 pub static UUID_ENV_VAR_NAME: &str =
     concat!("CARGO_INJECT_", env!("CARGO_PKG_NAME"), "_SECOND_PASS_UUID");
 
-pub fn gen_second_pass() -> TokenStream {
-    let i = Ident::new(
+pub fn gen_second_pass() -> proc_macro::TokenStream {
+    let i = proc_macro2::Ident::new(
         &format!(
             "{}_UUID_{}",
             env!("CARGO_PKG_NAME"),
             std::env::var(UUID_ENV_VAR_NAME).unwrap()
         ),
-        Span::call_site(),
+        proc_macro2::Span::call_site(),
     );
-    quote! {
+    (quote! {
         static #i: &'static str = module_path!();
-    }
+    })
+    .into()
 }
 
 pub fn gen_first_pass(client_proc_macro_crate_name: &str) {
     // don't make spurious calls to rustc
-    let call_site = Span::call_site().unwrap();
+    let call_site = proc_macro2::Span::call_site().unwrap();
     if MODCACHE.with(|m| {
         let locked = m.read().unwrap();
         for i in 0..locked.len() {
@@ -83,7 +82,7 @@ pub fn gen_first_pass(client_proc_macro_crate_name: &str) {
     }
     MODCACHE.with(|m| {
         m.write().unwrap().push((
-            Span::call_site(),
+            proc_macro2::Span::call_site(),
             resolve_modpath(client_proc_macro_crate_name),
         ))
     });

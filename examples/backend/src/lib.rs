@@ -9,7 +9,7 @@ use proc_macro::TokenStream;
 #[proc_macro_attribute]
 pub fn test(_attr: TokenStream, _input: TokenStream) -> TokenStream {
     if std::env::var(caller_modpath::UUID_ENV_VAR_NAME).is_ok() {
-        return caller_modpath::gen_second_pass().into();
+        return caller_modpath::gen_second_pass();
     }
 
     caller_modpath::gen_first_pass(env!("CARGO_CRATE_NAME"));
