@@ -27,7 +27,7 @@ impl CallerModpath for proc_macro::Span {
                     return locked[i].1.clone();
                 }
             }
-            panic!("wree");
+            panic!("Attempt to call Span::caller_modpath() without first putting #[expose_caller_modpath] on the parent #[proc_macro_attribute]!");
         })
     }
 }

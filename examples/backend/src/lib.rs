@@ -5,7 +5,7 @@
 use caller_modpath::CallerModpath;
 use proc_macro::TokenStream;
 
-//#[caller_modpath::make_modpath_available]
+#[caller_modpath::expose_caller_modpath]
 #[proc_macro_attribute]
 pub fn test(_attr: TokenStream, _input: TokenStream) -> TokenStream {
     if std::env::var(caller_modpath::UUID_ENV_VAR_NAME).is_ok() {
