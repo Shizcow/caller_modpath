@@ -12,11 +12,29 @@ use std::path::PathBuf;
 use std::sync::RwLock;
 use uuid::Uuid;
 
+// use when we call rustc on ourself (this lib gets wild)
+pub static UUID_ENV_VAR_NAME: &str =
+    concat!("CARGO_INJECT_", env!("CARGO_PKG_NAME"), "_SECOND_PASS_UUID");
+
+// so Span is a really special type
+// It is very dumb and implements no useful traits (Eq, Hash, Send, Sync, etc)
+// A lot of this stuff is crazy because of that
+// If this was better I'd stick it in a lazy_static HashMap and call it a day but sometype needs attention
+thread_local! {
+    static MODCACHE: RwLock<Vec<(proc_macro2::Span, ResolveStatus)>> = RwLock::new(vec![]);
+}
+
+enum ResolveStatus {
+    Unresolved(&'static str), // crate name
+    Resolved(String),         // module path name
+}
+
 // This trait is the main interface for this crate
 pub trait CallerModpath {
     fn caller_modpath() -> String;
 }
 
+// Find the corresponding entry in MODCACHE, and
 impl CallerModpath for proc_macro::Span {
     fn caller_modpath() -> String {
         let call_site = proc_macro2::Span::call_site().unwrap();
@@ -24,7 +42,16 @@ impl CallerModpath for proc_macro::Span {
             let locked = m.read().unwrap();
             for i in 0..locked.len() {
                 if locked[i].0.unwrap().eq(&call_site) {
-                    return locked[i].1.clone();
+		    return match locked[i].1 {
+			ResolveStatus::Resolved(ref modpath) => {
+			    modpath.clone()
+			},
+			ResolveStatus::Unresolved(cratename) => {
+			    let modpath = resolve_modpath(cratename);
+			    locked[i].1 = ResolveStatus::Resolved(modpath.clone());
+			    modpath
+			},
+		    };
                 }
             }
             panic!("Attempt to call Span::caller_modpath() without first putting #[expose_caller_modpath] on the parent #[proc_macro_attribute]!");
@@ -38,17 +65,6 @@ impl CallerModpath for proc_macro2::Span {
         proc_macro::Span::caller_modpath()
     }
 }
-
-// so Span is a really special type
-// It is very dumb and implements no useful traits (Eq, Hash, Send, Sync, etc)
-// A lot of this stuff is crazy because of that
-// If this was better I'd stick it in a lazy_static HashMap and call it a day but sometype needs attention
-thread_local! {
-    static MODCACHE: RwLock<Vec<(proc_macro2::Span, String)>> = RwLock::new(vec![]);
-}
-
-pub static UUID_ENV_VAR_NAME: &str =
-    concat!("CARGO_INJECT_", env!("CARGO_PKG_NAME"), "_SECOND_PASS_UUID");
 
 pub fn gen_second_pass() -> proc_macro::TokenStream {
     let i = proc_macro2::Ident::new(
@@ -65,8 +81,8 @@ pub fn gen_second_pass() -> proc_macro::TokenStream {
     .into()
 }
 
-pub fn gen_first_pass(client_proc_macro_crate_name: &str) {
-    // don't make spurious calls to rustc
+pub fn gen_first_pass(client_proc_macro_crate_name: &'static str) {
+    // Make sure we aren't logging the call site twice
     let call_site = proc_macro2::Span::call_site().unwrap();
     if MODCACHE.with(|m| {
         let locked = m.read().unwrap();
@@ -77,13 +93,13 @@ pub fn gen_first_pass(client_proc_macro_crate_name: &str) {
         }
         return false;
     }) {
-        // modpath is alreayd known; no need to recalculate
         return;
     }
-    MODCACHE.with(|m| {
+    // Then just push an empty to be resolved when we actually ask for it
+    MODCACHE.with(move |m| {
         m.write().unwrap().push((
             proc_macro2::Span::call_site(),
-            resolve_modpath(client_proc_macro_crate_name),
+            ResolveStatus::Unresolved(client_proc_macro_crate_name),
         ))
     });
 }
