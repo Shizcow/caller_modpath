@@ -22,6 +22,7 @@ dependencies = [
  "caller_modpath_macros",
  "cargo-manifest",
  "glob",
+ "lazy_static",
  "once_cell",
  "proc-macro2",
  "quote",
@@ -105,6 +106,12 @@ version = "0.1.0"
 dependencies = [
  "backend",
 ]
+
+[[package]]
+name = "lazy_static"
+version = "1.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 
 [[package]]
 name = "libc"

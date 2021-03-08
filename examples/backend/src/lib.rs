@@ -2,6 +2,7 @@
 #![feature(proc_macro_span)]
 #![feature(proc_macro_def_site)]
 
+use caller_modpath::CallerModpath;
 use proc_macro::TokenStream;
 
 //#[caller_modpath::make_modpath_available]
@@ -11,14 +12,10 @@ pub fn test(_attr: TokenStream, _input: TokenStream) -> TokenStream {
         return caller_modpath::gen_second_pass().into();
     }
 
-    trait ModPath {
-        fn modpath() -> &'static String {
-            static CELL: caller_modpath::OnceCell<String> = caller_modpath::OnceCell::new();
-            CELL.get_or_init(|| caller_modpath::gen_first_pass(env!("CARGO_CRATE_NAME")))
-        }
-    }
+    caller_modpath::gen_first_pass(env!("CARGO_CRATE_NAME"));
 
-    impl ModPath for proc_macro::Span {}
-
-    panic!("module path of call site: {}", proc_macro::Span::modpath());
+    panic!(
+        "module path of call site: {}",
+        proc_macro::Span::caller_modpath()
+    );
 }
