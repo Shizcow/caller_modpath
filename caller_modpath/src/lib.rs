@@ -100,15 +100,16 @@ pub fn gen_second_pass() -> proc_macro::TokenStream {
 pub fn gen_first_pass(client_proc_macro_crate_name: &'static str) {
     // Make sure we aren't logging the call site twice
     let call_site = proc_macro2::Span::call_site().unwrap();
-    if MODCACHE.with(|m| {
+    let already_calculated = MODCACHE.with(|m| {
         let locked = m.read().unwrap();
         for i in 0..locked.len() {
             if locked[i].0.unwrap().eq(&call_site) {
                 return true;
             }
         }
-        return false;
-    }) {
+        false
+    });
+    if already_calculated {
         return;
     }
     // Then just push an empty to be resolved when we actually ask for it
