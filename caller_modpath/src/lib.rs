@@ -34,27 +34,43 @@ pub trait CallerModpath {
     fn caller_modpath() -> String;
 }
 
-// Find the corresponding entry in MODCACHE, and
+// Get the caller modpath with lazy calculation
 impl CallerModpath for proc_macro::Span {
     fn caller_modpath() -> String {
         let call_site = proc_macro2::Span::call_site().unwrap();
+        // First, try to find any mention of it (it's initialized by the macro)
         MODCACHE.with(move |m| {
-            let locked = m.read().unwrap();
-            for i in 0..locked.len() {
-                if locked[i].0.unwrap().eq(&call_site) {
-		    return match locked[i].1 {
-			ResolveStatus::Resolved(ref modpath) => {
-			    modpath.clone()
-			},
-			ResolveStatus::Unresolved(cratename) => {
-			    let modpath = resolve_modpath(cratename);
-			    locked[i].1 = ResolveStatus::Resolved(modpath.clone());
-			    modpath
-			},
-		    };
-                }
-            }
-            panic!("Attempt to call Span::caller_modpath() without first putting #[expose_caller_modpath] on the parent #[proc_macro_attribute]!");
+	    // overwritten and used only when required
+	    let mut need_to_write_index = None;
+	    let mut newly_resolved = None;
+	    { // this weird scope is so the mutex can be reused mutably later
+		let locked = m.read().unwrap();
+		for i in 0..locked.len() {
+                    if locked[i].0.unwrap().eq(&call_site) {
+			match locked[i].1 {
+			    ResolveStatus::Resolved(ref modpath) => {
+				// If we have calculated everything already, just return it
+				return modpath.clone();
+			    },
+			    ResolveStatus::Unresolved(cratename) => {
+				// Otherwise, calculate and continue
+				let modpath = resolve_modpath(cratename);
+				need_to_write_index = Some(i);
+				newly_resolved = Some(modpath.to_owned());
+			    },
+			};
+                    }
+		};
+	    }
+	    // If we found no mention, the user forgot to set up
+	    if need_to_write_index.is_none() {
+		panic!("Attempt to call Span::caller_modpath() without first putting #[expose_caller_modpath] on the parent #[proc_macro_attribute]!");
+	    }
+	    // Otherise, do the calculation and cache+return the result
+	    let mut write_lock = m.write().unwrap();
+	    let modpath = newly_resolved.unwrap();
+	    write_lock[need_to_write_index.unwrap()].1 = ResolveStatus::Resolved(modpath.clone());
+	    modpath
         })
     }
 }
