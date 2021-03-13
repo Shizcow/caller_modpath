@@ -3,14 +3,13 @@
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse::Nothing, Block, ItemFn};
-
-/// Makes `Span::caller_modpath()` available to the applied macro, and all
-/// functions which it calls.
+/// Makes [`Span::caller_modpath()`](https://docs.rs/caller_modpath/trait.CallerModpath.html#tymethod.caller_modpath)
+/// available to the applied macro, and all functions which it calls.
 ///
 /// ## Note:
 /// This can only be applied to [`#[proc_macro_attribute]`](https://doc.rust-lang.org/nightly/book/ch19-06-macros.html#procedural-macros-for-generating-code-from-attributes) functions.
 ///
-/// [`#[macro@expose_caller_modpath]`](macro@expose_caller_modpath) should go above
+/// [`#[expose_caller_modpath]`](macro@expose_caller_modpath) should go above
 /// [`#[proc_macro_attribute]`](https://doc.rust-lang.org/nightly/book/ch19-06-macros.html#procedural-macros-for-generating-code-from-attributes)
 ///
 /// ## Example:

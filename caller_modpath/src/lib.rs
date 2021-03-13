@@ -1,11 +1,14 @@
 #![feature(proc_macro_span)]
 
+//! Getting the module path of the caller within a [`#[proc_macro_attribute]`](https://doc.rust-lang.org/nightly/book/ch19-06-macros.html#procedural-macros-for-generating-code-from-attributes).
+
 // yeah
 extern crate proc_macro;
 
 pub use caller_modpath_macros::*;
-
+#[doc(hidden)]
 pub use once_cell::sync::OnceCell;
+#[doc(hidden)]
 pub use quote::quote;
 
 use std::path::PathBuf;
@@ -13,6 +16,7 @@ use std::sync::RwLock;
 use uuid::Uuid;
 
 // use when we call rustc on ourself (this lib gets wild)
+#[doc(hidden)]
 pub static UUID_ENV_VAR_NAME: &str =
     concat!("CARGO_INJECT_", env!("CARGO_PKG_NAME"), "_SECOND_PASS_UUID");
 
@@ -30,11 +34,21 @@ enum ResolveStatus {
 }
 
 // This trait is the main interface for this crate
+/// Provides a way to fetch the module path of the caller.
+///
+/// ## Note:
+/// [`#[expose_caller_modpath]`](macro@expose_caller_modpath) must be placed on the parent
+/// [`#[proc_macro_attribute]`](https://doc.rust-lang.org/nightly/book/ch19-06-macros.html#procedural-macros-for-generating-code-from-attributes)
+/// to enable. [`caller_modpath`](CallerModpath::caller_modpath) may be called from children functions, so long as
+/// [`#[expose_caller_modpath]`](macro@expose_caller_modpath) is applied to the parent.
 pub trait CallerModpath {
+    /// Get the caller modpath.
+    ///
+    /// Fetching is done lazily and cahced into a static. So, the first call will be slow and subsequent
+    /// calls will be much faster.
     fn caller_modpath() -> String;
 }
 
-// Get the caller modpath with lazy calculation
 impl CallerModpath for proc_macro::Span {
     fn caller_modpath() -> String {
         let call_site = proc_macro2::Span::call_site().unwrap();
@@ -76,12 +90,15 @@ impl CallerModpath for proc_macro::Span {
 }
 
 // I just want this available for both types
+/// This impl is for [`proc_macro2::Span`](https://docs.rs/proc-macro2/1.0.24/proc_macro2/struct.Span.html).
+/// The backend is the exact same; this is just provided for convienience.
 impl CallerModpath for proc_macro2::Span {
     fn caller_modpath() -> String {
         proc_macro::Span::caller_modpath()
     }
 }
 
+#[doc(hidden)]
 pub fn gen_second_pass() -> proc_macro::TokenStream {
     let i = proc_macro2::Ident::new(
         &format!(
@@ -97,6 +114,7 @@ pub fn gen_second_pass() -> proc_macro::TokenStream {
     .into()
 }
 
+#[doc(hidden)]
 pub fn gen_first_pass(client_proc_macro_crate_name: &'static str) {
     // Make sure we aren't logging the call site twice
     let call_site = proc_macro2::Span::call_site().unwrap();
