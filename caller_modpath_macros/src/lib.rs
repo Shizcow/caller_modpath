@@ -12,17 +12,7 @@ use syn::{parse::Nothing, Block, ItemFn};
 /// [`#[expose_caller_modpath]`](macro@expose_caller_modpath) should go above
 /// [`#[proc_macro_attribute]`](https://doc.rust-lang.org/nightly/book/ch19-06-macros.html#procedural-macros-for-generating-code-from-attributes)
 ///
-/// ## Example:
-/// ```
-/// #[caller_modpath::expose_caller_modpath]
-/// #[proc_macro_attribute]
-/// pub fn test(_attr: TokenStream, _input: TokenStream) -> TokenStream {
-///     panic!(
-///         "module path of call site: {}",
-///         proc_macro::Span::caller_modpath()
-///     );
-/// }
-/// ```
+/// For an example, see the [top level documentation](https://docs.rs/caller_modpath).
 // prepend the setup code to the beginning of the input proc_macro
 #[proc_macro_attribute]
 pub fn expose_caller_modpath(attr: TokenStream, input: TokenStream) -> TokenStream {

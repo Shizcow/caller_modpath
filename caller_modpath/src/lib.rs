@@ -1,6 +1,47 @@
 #![feature(proc_macro_span)]
 
 //! Getting the module path of the caller within a [`#[proc_macro_attribute]`](https://doc.rust-lang.org/nightly/book/ch19-06-macros.html#procedural-macros-for-generating-code-from-attributes).
+//!
+//! This crate provides two items:
+//! - [`#[expose_caller_modpath]`](macro@expose_caller_modpath)
+//! - [`CallerModpath::caller_modpath`](CallerModpath::caller_modpath)
+//!
+//! The first makes the second available; see the documentation on each for more information.
+//!
+//! ## Example
+//!
+//! ```
+//! #[caller_modpath::expose_caller_modpath]
+//! #[proc_macro_attribute]
+//! pub fn test(_attr: TokenStream, _input: TokenStream) -> TokenStream {
+//!     let modpath: String = proc_macro::Span::caller_modpath();
+//!     // now do something with it. For example, just panic to have the compiler display the result:
+//!     panic!(
+//!         "module path of call site: {}",
+//!         modpath
+//!     );
+//! }
+//! ```
+//!
+//! ## Nightly Requirement
+//! This crate internally uses the `proc_macro_span` feature.
+//! This is only used to test the equality of two Spans.
+//! If you know how to do this without nightly, file an issue or PR on the
+//! [upstream GitHub repo](https://github.com/Shizcow/caller_modpath).
+//! Help is greatly appreciated!
+//!
+//! ## Backend
+//! This crate causes the macro invoker to call rustc on itself.
+//! [`#[expose_caller_modpath]`](macro@expose_caller_modpath) performans some setup such that on the meta-call
+//! the target macro essentially expands to
+//! [`module_path!()`](https://doc.rust-lang.org/std/macro.module_path.html)
+//! with some additional identifiers. These identifiers are read within
+//! [`CallerModpath::caller_modpath`](CallerModpath::caller_modpath), which does the rustc meta-call,
+//! parsing and returning the value.
+//!
+//! Because this crate does some terribly non-standard stuff, issues are bound to occur.
+//! If you run into something, file an issue at the
+//! [upstream GitHub repo](https://github.com/Shizcow/caller_modpath).
 
 // yeah
 extern crate proc_macro;
