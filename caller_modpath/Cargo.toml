@@ -3,9 +3,15 @@ name = "caller_modpath"
 version = "0.1.0"
 authors = ["Shizcow <pohl.devin@gmail.com>"]
 edition = "2018"
+description = "Get the module path of the caller in a proc_macro"
+license = "MIT OR Apache-2.0"
+readme = "../README.md"
+repository = "https://github.com/Shizcow/caller_modpath"
+keywords = ["module_path", "module path", "modpath"]
+categories = ["development-tools"]
 
 [dependencies]
-caller_modpath_macros = { path = "../caller_modpath_macros" }
+caller_modpath_macros = { path = "../caller_modpath_macros" , version = "0.1.0"}
 glob = "0.3.0"
 uuid = {version = "0.8.2", features=["v4"]}
 proc-macro2 = { version="1.0.20", features = ["span-locations"] }
