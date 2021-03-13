@@ -1,1 +1,0 @@
-static INCLUDED: &'static str = "123456";
