@@ -1,2 +1,8 @@
-**/target
-**/Cargo.lock
+**/target/
+
+Cargo.lock
+**/*Cargo.lock
+
+**/*.rs.bk
+
+**/cargo-timing*.html
