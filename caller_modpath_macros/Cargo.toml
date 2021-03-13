@@ -11,15 +11,8 @@ keywords = ["module_path", "module path", "modpath"]
 categories = ["development-tools"]
 
 [dependencies]
-proc-macro2 = {version="1.0.20", features = ["span-locations"]}
-syn = {version = "1.0.23", features = ["full", "extra-traits"]}
+syn = {version = "1.0.23", features = ["full"]}
 quote = "1.0.6"
-stdext = "0.2.1"
-proc-macro-error = "1.0.4"
-enquote = "1.0.3"
-cargo-manifest = "0.2.3"
-uuid = {version = "0.8.2", features=["v4"]}
-glob = "0.3.0"
 
 [lib]
 proc-macro = true

@@ -20,7 +20,7 @@ pub fn expose_caller_modpath(attr: TokenStream, input: TokenStream) -> TokenStre
 
     // for error reporting
     let proc_err = syn::Error::new(
-        proc_macro2::Span::call_site(),
+        proc_macro::Span::call_site().into(),
         "#[expose_caller_modpath] can only be used on #[proc_macro_attribute] functions",
     )
     .to_compile_error()

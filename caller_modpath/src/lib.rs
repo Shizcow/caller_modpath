@@ -48,8 +48,6 @@ extern crate proc_macro;
 
 pub use caller_modpath_macros::*;
 #[doc(hidden)]
-pub use once_cell::sync::OnceCell;
-#[doc(hidden)]
 pub use quote::quote;
 
 use std::path::PathBuf;
