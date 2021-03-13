@@ -1,6 +1,6 @@
 [package]
 name = "caller_modpath"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Shizcow <pohl.devin@gmail.com>"]
 edition = "2018"
 description = "Get the module path of the caller in a proc_macro"
@@ -11,9 +11,9 @@ keywords = ["module_path", "modpath"]
 categories = ["development-tools"]
 
 [dependencies]
-caller_modpath_macros = { path = "../caller_modpath_macros" , version = "0.1.0"}
+caller_modpath_macros = { path = "../caller_modpath_macros" , version = "0.1.1"}
 glob = "0.3.0"
 uuid = {version = "0.8.2", features=["v4"]}
-proc-macro2 = { version="1.0.20", features = ["span-locations"] }
+proc-macro2 = "1.0.20"
 quote = "1.0.6"
 cargo-manifest = "0.2.3"

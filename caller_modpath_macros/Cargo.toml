@@ -1,9 +1,9 @@
 [package]
 name = "caller_modpath_macros"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Shizcow <pohl.devin@gmail.com>"]
 edition = "2018"
-description = "Get the module path of the caller in a proc_macro"
+description = "proc_macros for caller_modpath"
 license = "MIT OR Apache-2.0"
 readme = "../README.md"
 repository = "https://github.com/Shizcow/caller_modpath"
