@@ -188,9 +188,7 @@ fn resolve_modpath(client_proc_macro_crate_name: &str) -> String {
     let liblink_path = format!("{}={}", client_proc_macro_crate_name, chosen_dir);
 
     let rustc_args = vec![
-        "-Z",
-        "unstable-options",
-        "--pretty=expanded",
+        "-Zunpretty=expanded",
         "--color=never",
         "--extern",
         &liblink_path,
