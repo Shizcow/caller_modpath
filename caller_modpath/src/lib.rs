@@ -88,7 +88,7 @@ pub trait CallerModpath {
     fn caller_modpath() -> String;
 }
 
-impl CallerModpath for proc_macro::Span {
+impl CallerModpath for proc_macro2::Span {
     fn caller_modpath() -> String {
         let call_site = proc_macro2::Span::call_site().unwrap();
         // First, try to find any mention of it (it's initialized by the macro)
@@ -128,12 +128,9 @@ impl CallerModpath for proc_macro::Span {
     }
 }
 
-// I just want this available for both types
-/// This impl is for [`proc_macro2::Span`](https://docs.rs/proc-macro2/1.0.24/proc_macro2/struct.Span.html).
-/// The backend is the exact same; this is just provided for convienience.
-impl CallerModpath for proc_macro2::Span {
+impl CallerModpath for proc_macro::Span {
     fn caller_modpath() -> String {
-        proc_macro::Span::caller_modpath()
+        proc_macro2::Span::caller_modpath()
     }
 }
 
