@@ -54,6 +54,12 @@ use std::path::PathBuf;
 use std::sync::RwLock;
 use uuid::Uuid;
 
+#[cfg(target_os = "macos")]
+static DYLIB_EXTENSION: &str = "dylib";
+
+#[cfg(target_os = "linux")]
+static DYLIB_EXTENSION: &str = "so";
+
 // use when we call rustc on ourself (this lib gets wild)
 #[doc(hidden)]
 pub static UUID_ENV_VAR_NAME: &str =
@@ -244,13 +250,13 @@ fn find_lib_so(libname: &str) -> String {
     // target/{}/deps/ for crate dependencies
     let dep_p = target_path
         .join("deps")
-        .join(format!("lib{}-*.so", libname))
+        .join(format!("lib{}-*.{}", libname, DYLIB_EXTENSION))
         .into_os_string();
 
     let dep_str = dep_p.to_string_lossy();
 
     // and target/{}/ for workspace targets
-    let t_p = target_path.join(format!("lib{}.so", libname));
+    let t_p = target_path.join(format!("lib{}.{}", libname, DYLIB_EXTENSION));
 
     let mut file_candidates: Vec<_> = glob::glob(&dep_str)
         .expect("Failed to read library glob pattern")
